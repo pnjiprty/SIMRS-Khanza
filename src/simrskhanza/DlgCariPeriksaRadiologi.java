@@ -1891,6 +1891,11 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
             param.put("emailrs",akses.getemailrs());
             param.put("hasil",HasilPeriksa.getText());
             param.put("logo",Sequel.cariGambar("select setting.logo from setting"));
+            param.put("nik", Sequel.cariIsi("select pasien.no_ktp from pasien where pasien.no_rkm_medis=?", NoRM.getText()));
+            param.put("pekerjaan", Sequel.cariIsi("select pasien.pekerjaan from pasien where pasien.no_rkm_medis=? ", NoRM.getText()));
+            param.put("nrp", Sequel.cariIsi("select pasien.nip from pasien where pasien.no_rkm_medis=?", NoRM.getText()));
+            param.put("perusahaan", Sequel.cariIsi("select perusahaan_pasien.nama_perusahaan from pasien inner join perusahaan_pasien on pasien.perusahaan_pasien=perusahaan_pasien.kode_perusahaan where pasien.no_rkm_medis=?", this.NoRM.getText()));
+            param.put("carabayar", Sequel.cariIsi("select penjab.png_jawab from reg_periksa inner join penjab on reg_periksa.kd_pj=penjab.kd_pj where reg_periksa.no_rawat=?", Kd2.getText()));
             finger=Sequel.cariIsi("select sha1(sidikjari.sidikjari) from sidikjari inner join pegawai on pegawai.id=sidikjari.id where pegawai.nik=?",kdpenjab);
             param.put("finger","Dikeluarkan di "+akses.getnamars()+", Kabupaten/Kota "+akses.getkabupatenrs()+"\nDitandatangani secara elektronik oleh "+tbDokter.getValueAt(tbDokter.getSelectedRow(),6).toString()+"\nID "+(finger.equals("")?kdpenjab:finger)+"\n"+Valid.SetTgl3(tbDokter.getValueAt(tbDokter.getSelectedRow(),3).toString()));  
             finger=Sequel.cariIsi("select sha1(sidikjari.sidikjari) from sidikjari inner join pegawai on pegawai.id=sidikjari.id where pegawai.nik=?",kdpetugas);
