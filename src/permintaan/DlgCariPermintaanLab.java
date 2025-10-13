@@ -1714,18 +1714,33 @@ private void BtnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                 if(NoPermintaan.trim().equals("")||DiagnosaKlinis.trim().equals("")){
                     Valid.textKosong(TCari,"No.Permintaan");
                 }else{
-                    if(Sampel.equals("")||akses.getkode().equals("Admin Utama")){
-                        if((Sequel.cariInteger("select count(noorder) from permintaan_pemeriksaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan)+
-                                Sequel.cariInteger("select count(noorder) from permintaan_detail_permintaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan))>0){
-                            JOptionPane.showMessageDialog(null,"Maaf, Tidak boleh dihapus karena sudah ada tindakan yang sudah dibayar.\nSilahkan hubungi kasir...!!!!");
-                        }else{
-                            Sequel.meghapus("permintaan_lab","noorder",NoPermintaan);
-                            TeksKosong();
-                            tampil();
-                        } 
-                    }else{
-                        JOptionPane.showMessageDialog(null,"Maaf, Sudah dilakukan pengambilan sampel...!!!!");
-                    }  
+                    
+                    if(!akses.getkode().equals("Admin Utama") && !akses.getperiksa_lab()){
+                        
+                        JOptionPane.showMessageDialog(null,"Maaf, tidak memiliki hak akses untuk menghapus!!!");
+                        return;
+                        
+                    }
+                    
+                    if(Sequel.cariRegistrasi(tbLabRalan.getValueAt(tbLabRalan.getSelectedRow(),1).toString())>1){
+                        JOptionPane.showMessageDialog(rootPane,"Data billing sudah terverifikasi, data tidak boleh dihapus.\nSilahkan hubungi bagian kasir/keuangan ..!!");
+                        return;
+                    }
+                    
+                    hapuspermintaanralan();
+                    
+//                    if(Sampel.equals("")||akses.getkode().equals("Admin Utama")){
+//                        if((Sequel.cariInteger("select count(noorder) from permintaan_pemeriksaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan)+
+//                                Sequel.cariInteger("select count(noorder) from permintaan_detail_permintaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan))>0){
+//                            JOptionPane.showMessageDialog(null,"Maaf, Tidak boleh dihapus karena sudah ada tindakan yang sudah dibayar.\nSilahkan hubungi kasir...!!!!");
+//                        }else{
+//                            Sequel.meghapus("permintaan_lab","noorder",NoPermintaan);
+//                            TeksKosong();
+//                            tampil();
+//                        } 
+//                    }else{
+//                        JOptionPane.showMessageDialog(null,"Maaf, Sudah dilakukan pengambilan sampel...!!!!");
+//                    }  
                 }
             }else{            
                 JOptionPane.showMessageDialog(null,"Maaf, silahkan pilih data permintaan...!!!!");
@@ -1742,18 +1757,33 @@ private void BtnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                 if(NoPermintaan.trim().equals("")||DiagnosaKlinis.trim().equals("")){
                     Valid.textKosong(TCari,"No.Permintaan");
                 }else{
-                    if(Sampel.equals("")||akses.getkode().equals("Admin Utama")){
-                        if((Sequel.cariInteger("select count(noorder) from permintaan_pemeriksaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan)+
-                                Sequel.cariInteger("select count(noorder) from permintaan_detail_permintaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan))>0){
-                            JOptionPane.showMessageDialog(null,"Maaf, Tidak boleh dihapus karena sudah ada tindakan yang sudah dibayar.\nSilahkan hubungi kasir...!!!!");
-                        }else{
-                            Sequel.meghapus("permintaan_lab","noorder",NoPermintaan);
-                            TeksKosong();
-                            tampil3();
-                        } 
-                    }else{
-                        JOptionPane.showMessageDialog(null,"Maaf, Sudah dilakukan pengambilan sampel...!!!!");
-                    }  
+                    
+                    if(!akses.getkode().equals("Admin Utama") && !akses.getperiksa_radiologi()){
+                        
+                        JOptionPane.showMessageDialog(null,"Maaf, tidak memiliki hak akses untuk menghapus!!!");
+                        return;
+                        
+                    }
+                    
+                    if(Sequel.cariRegistrasi(tbLabRanap.getValueAt(tbLabRanap.getSelectedRow(),1).toString())>1){
+                        JOptionPane.showMessageDialog(rootPane,"Data billing sudah terverifikasi, data tidak boleh dihapus.\nSilahkan hubungi bagian kasir/keuangan ..!!");
+                        return;
+                    }
+                    
+                    hapuspermintaanranap();
+                    
+//                    if(Sampel.equals("")||akses.getkode().equals("Admin Utama")){
+//                        if((Sequel.cariInteger("select count(noorder) from permintaan_pemeriksaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan)+
+//                                Sequel.cariInteger("select count(noorder) from permintaan_detail_permintaan_lab where stts_bayar='Sudah' and noorder=?",NoPermintaan))>0){
+//                            JOptionPane.showMessageDialog(null,"Maaf, Tidak boleh dihapus karena sudah ada tindakan yang sudah dibayar.\nSilahkan hubungi kasir...!!!!");
+//                        }else{
+//                            Sequel.meghapus("permintaan_lab","noorder",NoPermintaan);
+//                            TeksKosong();
+//                            tampil3();
+//                        } 
+//                    }else{
+//                        JOptionPane.showMessageDialog(null,"Maaf, Sudah dilakukan pengambilan sampel...!!!!");
+//                    }  
                 }
             }else{            
                 JOptionPane.showMessageDialog(null,"Maaf, silahkan pilih data permintaan...!!!!");
@@ -4871,6 +4901,28 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
             FormMenu.setVisible(false);    
             ChkAccor.setVisible(true);
         }
+    }
+    
+    private void hapuspermintaanralan(){
+        
+        int reply = JOptionPane.showConfirmDialog(rootPane,"Apakah anda yakin ingin menghapus data??? Data yang sudah dihapus tidak dapat dikembalikan!!!","Konfirmasi",JOptionPane.YES_NO_OPTION);
+        if (reply == JOptionPane.YES_OPTION)
+        {
+            Sequel.meghapus("permintaan_lab","noorder",tbLabRalan.getValueAt(tbLabRalan.getSelectedRow(),0).toString());
+            tampil();
+        }
+        
+    }
+    
+    private void hapuspermintaanranap(){
+        
+        int reply = JOptionPane.showConfirmDialog(rootPane,"Apakah anda yakin ingin menghapus data??? Data yang sudah dihapus tidak dapat dikembalikan!!!","Konfirmasi",JOptionPane.YES_NO_OPTION);
+        if (reply == JOptionPane.YES_OPTION)
+        {
+            Sequel.meghapus("permintaan_lab","noorder",tbLabRanap.getValueAt(tbLabRanap.getSelectedRow(),0).toString());
+            tampil();
+        }
+        
     }
     
 }
