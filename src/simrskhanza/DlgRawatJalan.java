@@ -5599,6 +5599,11 @@ public final class DlgRawatJalan extends javax.swing.JDialog {
         TAdnexaKiri.setText("");
         TCavumDouglas.setText("");
         Catatan.setText("");
+        TSituation.setText("");
+        TBackground.setText("");
+        TAssesment.setText("");
+        TRecommendation.setText("");
+        Tulis.setText("");
         cmbKesadaran.setSelectedIndex(0);
         TNoRw.requestFocus();
 }//GEN-LAST:event_BtnBatalActionPerformed
@@ -6135,6 +6140,62 @@ public final class DlgRawatJalan extends javax.swing.JDialog {
                     }
                     LCount.setText(""+TabModeCatatan.getRowCount());
                 }   break;
+
+            //SBAR    
+            case 8: {
+                if(TabModeSBAR.getRowCount()==0){
+                    JOptionPane.showMessageDialog(null,"Maaf, data sudah habis...!!!!");
+                    TNoRw.requestFocus();
+                    break;
+                }
+
+                for (int i = 0; i < tbSBAR.getRowCount(); i++) {
+                    
+                    boolean isCeklis = tbSBAR.getValueAt(i, 0).toString().equals("true");
+                    
+                    if (isCeklis) {
+                        // 3. Ekstrak data dari kolom agar mudah dibaca (tidak perlu get_Value_At terus-menerus)
+                        String noRawat = tbSBAR.getValueAt(i, 1).toString();
+                        String tglRawat = tbSBAR.getValueAt(i, 4).toString();
+                        String jamRawat = tbSBAR.getValueAt(i, 5).toString();
+                        String nipPetugas = tbSBAR.getValueAt(i, 10).toString();
+
+                        // 4. Logika Hak Akses & Batas Waktu
+                        boolean isAdmin = akses.getkode().equals("Admin Utama");
+                        boolean isPetugasSesuai = akses.getkode().equals(nipPetugas);
+                        boolean isWaktuAman = Sequel.cekTanggal48jam(tglRawat + " " + jamRawat, Sequel.ambiltanggalsekarang());
+
+                        boolean isBolehHapus = false;
+
+                        if (isAdmin) {
+                            isBolehHapus = true;
+                        } else {
+                            if (isWaktuAman) {
+                                if (isPetugasSesuai) {
+                                    isBolehHapus = true; // Petugas yang sama & masih dalam 48 jam
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "Hanya bisa dihapus oleh dokter/petugas yang bersangkutan..!!");
+                                }
+                            }
+                            // Catatan: Jika isWaktuAman false (lebih dari 48 jam), dia otomatis tidak terhapus.
+                        }
+
+                        if (isBolehHapus) {
+                            String sqlDelete = "DELETE FROM pemeriksaan_ralan_sbar WHERE no_rawat='" + noRawat + 
+                                               "' AND tgl_perawatan='" + tglRawat + 
+                                               "' AND jam_rawat='" + jamRawat + "'";
+                            
+                            Sequel.queryu(sqlDelete);
+                            TabModeSBAR.removeRow(i);
+                            i--;
+                        }
+                    }
+                }
+
+                // 6. Update Label Jumlah Record
+                LCount.setText("" + TabModeSBAR.getRowCount());
+                break;   
+            }
             default:
                 break;
         }
@@ -7082,6 +7143,96 @@ private void BtnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                             TCari.requestFocus();
                         }
                     }   break;
+
+                //SBAR
+                case 8: {
+                
+                    int row = tbSBAR.getSelectedRow();
+                    
+                    if (row == -1) {
+                        JOptionPane.showMessageDialog(rootPane, "Silahkan pilih data SBAR yang mau diganti..!!");
+                        TCari.requestFocus();
+                        break;
+                    }
+
+                    boolean isFormKosong = TSituation.getText().trim().equals("") && 
+                                        TBackground.getText().trim().equals("") && 
+                                        TAssesment.getText().trim().equals("") && 
+                                        TRecommendation.getText().trim().equals("") &&
+                                        Tulis.getText().trim().equals("");
+                                        
+                    if (isFormKosong) {
+                        Valid.textKosong(TSituation, "Data Situation / Background / Assesment / Recommendation");
+                        break;
+                    }
+
+                    if (KdPeg2.getText().trim().equals("") || TPegawai2.getText().trim().equals("")) {
+                        Valid.textKosong(KdPeg2, "Dokter/Paramedis SBAR");
+                        break;
+                    }
+
+                    String noRawatLama = tbSBAR.getValueAt(row, 1).toString();
+                    String tglLama     = tbSBAR.getValueAt(row, 4).toString();
+                    String jamLama     = tbSBAR.getValueAt(row, 5).toString();
+                    String nipPembuat  = tbSBAR.getValueAt(row, 10).toString(); 
+
+                    boolean isAdmin = akses.getkode().equals("Admin Utama");
+                    boolean isPembuat = akses.getkode().equals(nipPembuat);
+                    
+                    boolean isBolehEdit = false;
+
+                    if (isAdmin) {
+                        isBolehEdit = true;
+                    } else {
+                        if (isPembuat) {
+                            // Pindahkan cekTanggal48jam ke sini, agar hanya dicek untuk Petugas biasa!
+                            if (Sequel.cekTanggal48jam(tglLama + " " + jamLama, Sequel.ambiltanggalsekarang())) {
+                                
+                                if (TanggalRegistrasi.getText().equals("")) {
+                                    TanggalRegistrasi.setText(Sequel.cariIsi("select concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg) from reg_periksa where reg_periksa.no_rawat=?", TNoRw.getText()));
+                                }
+                                
+                                String tglEdit = Valid.SetTgl(DTPTgl.getSelectedItem() + "") + " " + cmbJam.getSelectedItem() + ":" + cmbMnt.getSelectedItem() + ":" + cmbDtk.getSelectedItem();
+                                if (Sequel.cekTanggalRegistrasi(TanggalRegistrasi.getText(), tglEdit)) {
+                                    isBolehEdit = true;
+                                }
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Hanya bisa diganti oleh dokter/petugas yang bersangkutan..!!");
+                            break;
+                        }
+                    }
+
+                    if (isBolehEdit) {
+                        String kondisiWhere = "no_rawat='" + noRawatLama + "' AND tgl_perawatan='" + tglLama + "' AND jam_rawat='" + jamLama + "'";
+                        
+                        String nilaiUpdate = "no_rawat='" + TNoRw.getText() + "'," +
+                                            "tgl_perawatan='" + Valid.SetTgl(DTPTgl.getSelectedItem() + "") + "'," +
+                                            "jam_rawat='" + cmbJam.getSelectedItem() + ":" + cmbMnt.getSelectedItem() + ":" + cmbDtk.getSelectedItem() + "'," +
+                                            "situation='" + TSituation.getText() + "'," +
+                                            "background='" + TBackground.getText() + "'," +
+                                            "assesment='" + TAssesment.getText() + "'," +
+                                            "recommendation='" + TRecommendation.getText() + "'," +
+                                            "nip='" + KdPeg2.getText() + "'," +
+                                            "tulis='" + Tulis.getText() + "'," +
+                                            "baca='" + Baca.getSelectedItem().toString() + "'," +
+                                            "konfirmasi='" + Konfirmasi.getSelectedItem().toString() + "'";
+
+                        if (Sequel.mengedittf("pemeriksaan_ralan_sbar", kondisiWhere, nilaiUpdate)) {
+                            
+                            TSituation.setText("");
+                            TBackground.setText("");
+                            TAssesment.setText("");
+                            TRecommendation.setText("");
+                            Tulis.setText("");
+                            Baca.setSelectedIndex(0);
+                            Konfirmasi.setSelectedIndex(0);
+                            
+                            tampilPemeriksaanSbar();
+                        }
+                    }
+                    break;
+                }
                 default:                
                     break;
             }
@@ -13330,6 +13481,11 @@ private void BtnEditKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
             case 7:
                 if(akses.getcatatan_perawatan()==true){
                     runBackground(() ->tampilCatatan());
+                }  
+                break;
+            case 8:
+                if(akses.getcatatan_perawatan()==true){
+                    runBackground(() ->tampilPemeriksaanSbar());
                 }  
                 break;
             default:
